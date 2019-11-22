@@ -1,0 +1,55 @@
+<workflow-app name="DemoOozie" xmlns="uri:oozie:workflow:0.1">
+ 
+            <start to="demo-hive"/>
+ 
+           <action name="demo-hive">
+ 
+                        <hive xmlns="uri:oozie:hive-action:0.2">
+ 
+                                    <job-tracker>${jobTracker}</job-tracker>
+ 
+                                    <name-node>${nameNode}</name-node>
+ 
+                                    <job-xml>${appPath}/hive-site.xml</job-xml>
+ 
+                                    <configuration>
+ 
+                                                <property>
+ 
+                                                            <name>oozie.hive.defaults</name>
+ 
+                                                            <value>${appPath}/hive-site.xml</value>
+ 
+                                                </property>
+ 
+                                                <property>
+ 
+                                                            <name>hadoop.proxyuser.oozie.hosts</name>
+ 
+                                                            <value>cloudera</value>
+ 
+                                                </property>
+ 
+                                                <property>
+ 
+                                                            <name>hadoop.proxyuser.oozie.groups</name>
+ 
+                                                            <value>cloudera</value>
+ 
+                                                </property>
+ 
+                                    </configuration>
+ 
+                                    <script>hive2.sql</script>
+ 
+                        </hive>
+ 
+                        <ok to="end"/>
+ 
+                        <error to="end"/>
+ 
+            </action>
+ 
+            <end name="end"/>
+ 
+</workflow-app>

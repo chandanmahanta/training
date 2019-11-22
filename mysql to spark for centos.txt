@@ -1,0 +1,45 @@
+//mysql-connector-java-5.1.23-bin.jar - place this jar under /usr/local/spark/jars folder
+
+cd /usr/lib/sqoop/lib/
+ls
+cd
+
+mysql-connector-java-*
+
+
+sudo cp /var/lib/sqoop2/mysql-connector-java.jar /usr/lib/spark/lib
+
+cd /usr/local/spark/lib
+ls
+
+ 
+
+spark-shell 
+
+val connection="jdbc:mysql://quickstart.cloudera/retail_db"
+val mysql_props = new java.util.Properties
+mysql_props.setProperty("user","root")
+mysql_props.setProperty("password","cloudera")
+
+val customer = sqlContext.read.jdbc(connection,"customers",mysql_props)
+customer.show
+customer.count
+
+customer.registerTempTable("customer")
+
+val orders = sqlContext.read.jdbc(connection,"orders",mysql_props)
+
+orders.registerTempTable("orders")
+
+val pending_orders = sqlContext.sql("select order_id, order_date, customer_fname, order_status from orders o join customers c on o.order_customer_id=c.customer_id where order_status != 'COMPLETE'")
+
+
+
+						
+pending_orders.collect.foreach(println)
+
+pending_orders.count
+
+to write data back to mysql
+----------------------------
+pending_orders.write.mode("append").jdbc(connection,"Pending_Orders_Status",mysql_props)

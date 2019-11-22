@@ -1,0 +1,25 @@
+copy the hive-site file from hive/conf folder to spark/conf
+------------------------------------------------------
+
+$ sudo cp /usr/lib/hive/conf/hive-site.xml /usr/lib/spark/conf/
+
+spark-shell
+
+import org.apache.spark.sql.hive.HiveContext
+
+val sqlContext = new HiveContext(sc)
+
+val customers = sqlContext.sql("select * from sqoop_imp.mycustomer")
+
+customers.count
+
+customers.collect.foreach(println);
+
+customers.registerTempTable("customer");
+
+
+
+write result back to hive
+--------------------------
+result.write.mode("overwrite").saveAsTable("sqoop_imp.result");
+

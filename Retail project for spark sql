@@ -1,0 +1,27 @@
+-- to load data from hdfs
+--- val retailRDD = sc.textFile("hdfs://quickstart.cloudera:8020/user/training/Retail_Data")
+
+val retailRDD = sc.textFile("file:/home/training/Retail_Data")
+
+retailRDD.count
+
+case class retail(txn_dt:String, custno:String, age:String, zipcode:String, category:String, product:String, qty:Int, cost:Long, sales:Long) ; 
+
+val retail2 = retailRDD.map(_.split(";"))
+
+val retail3 = retail2.map(v => retail(v(0).trim, v(1).trim, v(2).trim, v(3).trim, v(4).trim,v(5).trim, v(6).toInt,v(7).toLong,v(8).toLong))
+
+val retail4 = retail3.toDF
+
+retail4.printSchema
+
+retail4.show
+
+retail4.registerTempTable("retail")
+
+val q1 = spark.sql("select age, count(distinct(custno)) as Unique_customers, sum(sales) as total from retail where month(txn_dt) = 1 group by age order by total desc")
+
+
+
+
+

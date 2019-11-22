@@ -1,0 +1,142 @@
+In Mysql
+use retail_db;
+
+
+LIST DATABASES
+-------------
+sqoop list-databases --connect jdbc:mysql://127.0.0.1 --username root --password 'cloudera';
+
+
+sqoop list-databases --connect jdbc:mysql://127.0.0.1 --username root -P;
+
+
+
+
+LIST TABLES in a database
+--------------------------
+sqoop list-tables --connect jdbc:mysql://127.0.0.1/retail_db --username root --password 'cloudera';
+
+
+
+
+
+
+
+
+Import one table (with key)from mysql into HDFS
+------------------------------------------------
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --target-dir itc/customers;
+
+
+
+Add an extra record in mysql in retail_db
+INSERT INTO customers 
+     (customer_fname, customer_lname)
+     VALUES
+    ("John", "Smith");
+
+Select * from customers;
+
+
+WITH INCREMENTAL
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --check-column customer_id --incremental append --last-value 12435 --target-dir itc/customers;
+
+
+
+
+WITH WHERE CLAUSE
+----------------
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --where 'customer_lname="Smith"' --target-dir itc/query -m 1;
+
+
+WITH COLUMN CLAUSE
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --columns "customer_fname,customer_lname"  --target-dir itc/query51 -m 1;
+
+select * from customers where customer_lname='Smith';
+
+select * from customers c join orders o on c.customer_id=o.order_customer_id where o.order_status = "COMPLETE" ;
+
+22899 RECORDS
+
+
+
+
+WITH QUERY
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --query ' select * from customers c join orders o on c.customer_id=o.order_customer_id where o.order_status = "COMPLETE" AND $CONDITIONS '  --target-dir itc/query1 -m 1;
+
+WITH COLUMN CLAUSE
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table customers --columns "customer_fname,customer_lname"  --target-dir itc/query51 -m 1;
+
+
+
+Import all tables from mysql into hdfs      
+----------------------------------------------------
+sqoop import-all-tables --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --warehouse-dir itc/all_tables  ; 
+
+
+Import data into hive managed tables
+
+First create a database sqoop_imp in hive
+hive> create database sqoop_imp;
+
+
+sqoop import --connect  jdbc:mysql://localhost/retail_db --username  root --password 'cloudera' --table customers --hive-import --hive-table sqoop_imp.mycustomer -m 1;
+
+use sqoop_imp;
+desc mycustomer;
+select * from mycustomer;
+
+
+sqoop import --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --query ' select * from customers c join orders o on c.customer_id=o.order_customer_id where o.order_status = "COMPLETE" AND $CONDITIONS ' --hive-import --hive-table sqoop_imp.query --target-dir itc/query20 -m 1;
+
+
+select * from query;
+
+22899
+
+
+
+sqoop export command
+--------------------
+gedit employee.txt
+
+1201,satish,delhi
+1202,krishna,mumbai
+1203,amith,pune
+1204,javed,chennai
+1205,prudvi,bangalore
+
+cat employee.txt
+
+hadoop fs -put employee.txt itc
+
+
+gedit emp1.txt
+1201,satish1,delhi
+1202,krishna1,mumbai
+1206,sanjay,pune
+1207,rajiv,chennai
+1208,vijay,bangalore
+
+cat emp1.txt
+
+hadoop fs -put emp1.txt itc
+
+In MySQl
+use retail_db;
+
+CREATE TABLE employee_master(
+   employee_id INT NOT NULL AUTO_INCREMENT,
+   name VARCHAR(40) NOT NULL,
+   address VARCHAR(40) NOT NULL,
+   PRIMARY KEY ( employee_id ));
+
+
+sqoop export --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table employee_master --update-mode  allowinsert --update-key employee_id   --export-dir itc/employee.txt --input-fields-terminated-by ',' ;
+
+
+
+sqoop export --connect jdbc:mysql://localhost/retail_db --username root --password 'cloudera' --table employee_master --update-mode  allowinsert --update-key employee_id   --export-dir itc/emp1.txt --input-fields-terminated-by ',' ;
+
+
+

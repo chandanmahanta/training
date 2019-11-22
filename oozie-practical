@@ -1,0 +1,22 @@
+hadoop fs -mkdir -p /user/cloudera/workflows2/
+
+hadoop fs -put /home/cloudera/hive-oozie/workflow.xml /user/cloudera/workflows2/
+
+hadoop fs -put /home/cloudera/hive-oozie/hive2.sql /user/cloudera/workflows2/
+
+hadoop fs -put /etc/hive/conf/hive-site.xml /user/cloudera/workflows2/hive-site.xml
+
+hadoop fs -ls /user/cloudera/workflows2
+
+
+oozie job -oozie http://quickstart.cloudera:11000/oozie -config /home/cloudera/hive-oozie/job.properties -run
+
+
+to know the status on terminal
+-----------------------------
+oozie job -oozie http://localhost:11000/oozie -info 0000001-190218002651318-oozie-oozi-W
+
+
+
+
+

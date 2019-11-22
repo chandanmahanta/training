@@ -1,0 +1,63 @@
+import spark.sqlContext.implicits._
+
+
+
+val nyse1 = sc.textFile("/home/hduser/NYSE.csv")
+
+val nyse2 = nyse1.map(_.split(","))
+
+case class nyse(exchangename:String, stockid:String, date:String, open:Double, high:Double, low:Double, close:Double, volume:Long, adj_close:Double) ; 
+
+val nyse3 = nyse2.map(v => nyse(v(0).toString.trim, v(1).toString.trim, v(2).toString, v(3).toDouble, v(4).toDouble,v(5).toDouble, v(6).toDouble,v(7).toLong,v(8).toDouble))
+
+val nyse4 = nyse3.toDF
+
+nyse4.registerTempTable("sp_nyse");
+
+to find total volume for Top 10 stocks
+-----------------------------------
+val top10 = spark.sql("select stockid, sum(volume) as total from sp_nyse group by stockid order by total desc LIMIT 10")
+
+
+find max volume on a particular day
+------------------------------------
+val maxVol = spark.sql("select sp_nyse.stockid, date, volume from sp_nyse join (select stockid, max(volume) as maxvol from sp_nyse group by stockid) abc on (sp_nyse.stockid=abc.stockid and sp_nyse.volume = abc.maxvol)")
+
+
+top10.show()
+top10.printSchema()
+top10.write.csv("/home/hduser/sparksql1");
+
+
+
+to find the max variance for each stock (order it on max variance. show top 10 records)
+---------------------------------------------------------------------------------------
+
+val top10var = spark.sql("select stockid, date, round(max((high-low)/low*100),2) as maxvar from sp_nyse group by stockid, date order by maxvar desc LIMIT 10")
+
+top10var.write.csv("hdfs://localhost:54310/user/hduser/sparksql2");
+
+top10var.collect.foreach(println)
+
+
+sending the results to hive table
+--------------------------------
+top10var.write.mode("overwrite").saveAsTable("training.top10var");
+ 
+
+to find the highest price for each stock
+----------------------------------------
+val highprice = spark.sql("select stockid, round(max(high),2) as high from sp_nyse group by stockid order by stockid")
+
+
+to find the lowest price for each stock
+----------------------------------------
+val lowprice = spark.sql("select stockid, round(min(low),2) as low from sp_nyse group by stockid order by stockid")
+
+
+
+
+
+
+
+
